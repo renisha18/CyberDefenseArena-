@@ -1,16 +1,58 @@
-# React + Vite
+# CyberDefense Arena
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Modular React + Vite cybersecurity training game.
 
-Currently, two official plugins are available:
+## Quick Start
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+```bash
+npm install
+npm run dev
+```
 
-## React Compiler
+## Project Structure
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```
+src/
+├── components/
+│   ├── Navbar.jsx            # Top bar with health + XP (ChallengePage)
+│   ├── PixelButton.jsx       # Reusable pixel button (type prop)
+│   ├── PixelIcons.jsx        # All SVG pixel icons (Shield, Bug, Email, Logo)
+│   ├── StatusPanel.jsx       # Agent stats — top-right of Dashboard
+│   ├── StreakIndicator.jsx   # 🔥 Daily streak — top-left of Dashboard
+│   ├── LeaderboardPreview.jsx# Top-3 leaderboard widget — left of Dashboard
+│   ├── OfficeMap.jsx         # SVG pixel office map with room health bars
+│   ├── MatrixRain.jsx        # Animated matrix background effect
+│   └── Scanlines.jsx         # CRT scanline overlay
+│
+├── pages/
+│   ├── LandingPage.jsx       # / — intro screen, typewriter, JOIN MISSION
+│   ├── Dashboard.jsx         # /main — office map + all widgets + nav
+│   ├── ChallengePage.jsx     # /challenge — phishing detection game
+│   ├── LeaderboardPage.jsx   # /leaderboard — full player rankings
+│   └── TrainingPage.jsx      # /training — module progress tree
+│
+├── styles/
+│   ├── global.css            # CSS variables + all keyframe animations
+│   ├── landing.css           # Landing page classes
+│   ├── dashboard.css         # Dashboard layout classes
+│   └── components.css        # All component + challenge page classes
+│
+├── App.jsx                   # BrowserRouter + Routes + global player state
+└── main.jsx                  # React DOM entry point
+```
 
-## Expanding the ESLint configuration
+## Routes
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+| Path           | Page              |
+|----------------|-------------------|
+| `/`            | LandingPage       |
+| `/main`        | Dashboard         |
+| `/challenge`   | ChallengePage     |
+| `/leaderboard` | LeaderboardPage   |
+| `/training`    | TrainingPage      |
+
+## State Flow
+
+`playerXP` and `playerHealth` live in `App.jsx` and flow down:
+- `Dashboard` reads them for the StatusPanel
+- `ChallengePage` reports completion via `onComplete(xp, health)` callback

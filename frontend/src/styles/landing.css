@@ -1,0 +1,43 @@
+/* ── Landing Page ── */
+.landing {
+  width: 100vw; height: 100vh; background: #0a0e1a;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+  animation: flicker 6s infinite;
+}
+.landing__radar-ring {
+  position: absolute; border-radius: 50%;
+  border: 1px solid rgba(0,245,255,0.1);
+  pointer-events: none; z-index: 1;
+}
+.landing__card {
+  position: relative; z-index: 5; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 26px;
+  animation: boot-in .8s ease;
+}
+.landing__title-top {
+  font-family: var(--pixel); font-size: clamp(13px,2.8vw,24px);
+  color: var(--cyan); letter-spacing: 4px;
+  animation: glow-cyan 3s ease-in-out infinite; margin-bottom: 6px;
+}
+.landing__title-bottom {
+  font-family: var(--pixel); font-size: clamp(18px,4vw,34px);
+  color: #fff; letter-spacing: 6px;
+  text-shadow: 0 0 30px rgba(0,245,255,.4);
+}
+.landing__subtitle {
+  font-family: var(--pixel); font-size: clamp(5px,1.1vw,7px);
+  color: var(--green); letter-spacing: 2px; min-height: 20px;
+  text-shadow: 0 0 8px var(--green);
+}
+.landing__version {
+  font-family: var(--pixel); font-size: 5px;
+  color: rgba(0,245,255,.45);
+  border: 1px solid rgba(0,245,255,.2); padding: 4px 10px;
+}
+.landing__bootlog {
+  font-family: var(--pixel); font-size: 5px;
+  color: rgba(0,245,255,.4);
+  display: flex; flex-direction: column; gap: 3px; text-align: left;
+}
+.landing__bootlog span { color: var(--green); }
