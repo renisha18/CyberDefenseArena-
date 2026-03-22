@@ -1,33 +1,50 @@
 // ── src/pages/Dashboard.jsx ───────────────────────────────────────────────
-import { useState }       from "react";
-import { useNavigate }    from "react-router-dom";
-import { useAuth }        from "../context/AuthContext";
-import Scanlines          from "../components/Scanlines";
-import MatrixRain         from "../components/MatrixRain";
-import PixelButton        from "../components/PixelButton";
-import StatusPanel        from "../components/StatusPanel";
-import StreakIndicator    from "../components/StreakIndicator";
-import LeaderboardPreview from "../components/LeaderboardPreview";
-import OfficeMap          from "../components/OfficeMap";
-import { SmallLogo }      from "../components/PixelIcons";
-import api                from "../services/api";
+import { useState, useEffect } from "react";
+import { useNavigate }         from "react-router-dom";
+import { useAuth }             from "../context/AuthContext";
+import api                     from "../services/api";
+import Scanlines               from "../components/Scanlines";
+import MatrixRain              from "../components/MatrixRain";
+import PixelButton             from "../components/PixelButton";
+import StatusPanel             from "../components/StatusPanel";
+import StreakIndicator          from "../components/StreakIndicator";
+import LeaderboardPreview      from "../components/LeaderboardPreview";
+import OfficeMap               from "../components/OfficeMap";
+import { SmallLogo }           from "../components/PixelIcons";
 import "../styles/dashboard.css";
 
 function roomHealthColor(h) {
-  if (h >= 80) return "#39ff14";
-  if (h >= 55) return "#ffd700";
-  return "#ff2d55";
+  return h >= 75 ? "#39ff14" : h >= 45 ? "#ffd700" : "#ff2d55";
 }
 
-export default function Dashboard() {
-  const navigate            = useNavigate();
-  const { user, logout }    = useAuth();
-  const [selectedRoom, setSelectedRoom] = useState(null);
+const MODULE_ROUTES = {
+  phishing: "/challenge/phishing/1",
+  password: "/challenge/password/1",
+  social:   "/challenge/social/1",
+  malware:  "/challenge/malware/1",
+  network:  "/challenge/phishing/1",
+};
 
-  const playerHealth = user?.healthScore ?? 70;
-  const playerXP     = user?.xp          ?? 0;
-  const streak       = user?.streak       ?? 0;
-  const username     = user?.username     ?? "";
+export default function Dashboard() {
+  const navigate         = useNavigate();
+  const { user, logout } = useAuth();
+
+  const [selectedRoom,   setSelectedRoom]   = useState(null);
+  const [doneToday,      setDoneToday]      = useState(false);
+  const [checkingStatus, setCheckingStatus] = useState(true);
+
+  const hp       = user?.healthScore        ?? 70;
+  const xp       = user?.xp                 ?? 0;
+  const streak   = user?.streak             ?? 0;
+  const username = user?.username           ?? "";
+  const completed = user?.completedChallenges ?? 0;
+
+  useEffect(() => {
+    api.get("/phishing/status/1")
+      .then(({ data }) => setDoneToday(data.doneToday || data.alreadyDone))
+      .catch(() => {})
+      .finally(() => setCheckingStatus(false));
+  }, []);
 
   async function handleLogout() {
     await logout();
@@ -35,7 +52,7 @@ export default function Dashboard() {
   }
 
   const NAV_BUTTONS = [
-    { text: "⚡ DAILY CHALLENGE", color: "#39ff14", route: "/challenge" },
+    { text: "⚡ DAILY CHALLENGE", color: "#39ff14", route: "/challenge/phishing/1" },
     { text: "🏆 LEADERBOARD",     color: "#ffd700", route: "/leaderboard" },
     { text: "📡 TRAINING",         color: "#00f5ff", route: "/training" },
   ];
@@ -51,15 +68,23 @@ export default function Dashboard() {
           <SmallLogo />
           CYBERDEFENSE ARENA
           {username && (
-            <span style={{
-              fontFamily: "var(--pixel)", fontSize: "5px",
-              color: "rgba(0,245,255,.5)", marginLeft: "10px",
-            }}>
+            <span style={{ fontFamily: "var(--pixel)", fontSize: "5px", color: "rgba(0,245,255,.5)", marginLeft: "10px" }}>
               // {username.toUpperCase()}
             </span>
           )}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          {!checkingStatus && (
+            <div style={{
+              fontFamily: "var(--pixel)", fontSize: "5px", padding: "3px 8px",
+              border: `1px solid ${doneToday ? "#39ff14" : "#ffd700"}`,
+              color: doneToday ? "#39ff14" : "#ffd700",
+              boxShadow: `0 0 6px ${doneToday ? "rgba(57,255,20,.3)" : "rgba(255,215,0,.3)"}`,
+              animation: doneToday ? "none" : "blink 2s infinite",
+            }}>
+              {doneToday ? "✓ DAILY DONE" : "⚡ CHALLENGE READY"}
+            </div>
+          )}
           <div className="dashboard__topbar-live">NETWORK MONITOR — LIVE</div>
           <button onClick={handleLogout} style={{
             fontFamily: "var(--pixel)", fontSize: "5px", color: "#ff2d55",
@@ -74,15 +99,15 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Office map */}
+      {/* Office map — health derived from real player HP */}
       <div className="dashboard__map-area">
-        <OfficeMap onRoomClick={setSelectedRoom} />
+        <OfficeMap onRoomClick={setSelectedRoom} playerHealth={hp} />
       </div>
 
       {/* Overlays */}
       <StreakIndicator streak={streak} />
       <LeaderboardPreview />
-      <StatusPanel health={playerHealth} xp={playerXP} streak={streak} username={username} />
+      <StatusPanel health={hp} xp={xp} streak={streak} completedChallenges={completed} />
 
       {/* Room popup */}
       {selectedRoom && (
@@ -91,6 +116,13 @@ export default function Dashboard() {
           boxShadow: `0 0 40px ${roomHealthColor(selectedRoom.health)}55`,
         }}>
           <div className="dashboard__room-popup-title">{selectedRoom.label}</div>
+          <div style={{
+            fontFamily: "var(--pixel)", fontSize: "4px", marginBottom: "8px",
+            color: "#00f5ff", border: "1px solid rgba(0,245,255,.25)",
+            padding: "2px 6px", display: "inline-block", letterSpacing: "1px",
+          }}>
+            {selectedRoom.module?.toUpperCase()} MODULE
+          </div>
           <div style={{ fontFamily: "var(--pixel)", fontSize: "5px", color: "rgba(0,245,255,.5)", marginBottom: "6px" }}>
             SYSTEM HEALTH
           </div>
@@ -99,6 +131,7 @@ export default function Dashboard() {
               width: `${selectedRoom.health}%`, height: "100%",
               background: roomHealthColor(selectedRoom.health),
               boxShadow: `0 0 8px ${roomHealthColor(selectedRoom.health)}`,
+              transition: "width .5s",
             }} />
           </div>
           <div style={{
@@ -111,8 +144,9 @@ export default function Dashboard() {
           </div>
           <div className="dashboard__room-popup-actions">
             <PixelButton text="▶ DEFEND" type="primary"
-              onClick={() => { setSelectedRoom(null); navigate("/challenge"); }}
-              style={{ flex: 1 }} />
+              onClick={() => { setSelectedRoom(null); navigate(MODULE_ROUTES[selectedRoom.module] ?? "/challenge/phishing/1"); }}
+              style={{ flex: 1 }}
+            />
             <PixelButton text="✕" type="secondary" onClick={() => setSelectedRoom(null)} />
           </div>
         </div>

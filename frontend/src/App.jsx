@@ -19,10 +19,10 @@ import PhishingChallenge from "./modules/phishing/pages/PhishingChallenge";
 import PasswordChallenge from "./modules/password/pages/PasswordChallenge";
 
 // Module 3 — Social Engineering
-//import SocialChallenge from "./modules/social/pages/SocialChallenge";
+import SocialChallenge from "./modules/social/pages/SocialChallenge";
 
 // Module 4 — Malware
-//import MalwareChallenge from "./modules/malware/pages/MalwareChallenge";
+import MalwareChallenge from "./modules/malware/pages/MalwareChallenge";
 
 // Styles
 import "./styles/global.css";
