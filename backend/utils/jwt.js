@@ -27,10 +27,10 @@ function verifyToken(token) {
 function setTokenCookie(res, userId) {
   const token = signToken(userId);
   res.cookie(COOKIE_NAME, token, {
-    httpOnly:  true,                                        // JS cannot read this
-    secure:    process.env.NODE_ENV === "production",       // HTTPS in prod
-    sameSite:  "lax",                                       // CSRF protection
-    maxAge:    7 * 24 * 60 * 60 * 1000,                    // 7 days in ms
+    httpOnly:  true,
+    secure:    process.env.NODE_ENV === "production",
+    sameSite:  process.env.NODE_ENV === "production" ? "strict" : "lax",
+    maxAge:    7 * 24 * 60 * 60 * 1000,
   });
 }
 

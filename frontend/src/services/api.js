@@ -6,8 +6,8 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL:         import.meta.env.VITE_API_URL || "http://localhost:5000/api",
-  withCredentials: true,   // ← critical: sends the cookie cross-origin
+  baseURL:         "/api",   // Vite proxy forwards to http://localhost:5001/api
+  withCredentials: true,
 });
 
 // ── Response interceptor ──────────────────────────────────────────────────

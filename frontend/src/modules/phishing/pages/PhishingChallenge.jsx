@@ -94,11 +94,9 @@ export default function PhishingChallenge() {
     // Correct on final level — persist to DB
     setSubmitting(true);
     try {
-      const { data } = await api.post("/phishing/submit", {
+      const { data } = await api.post("/challenges/complete", {
         challengeId: DB_CHALLENGE_ID,
-        action,
       });
-      // Sync global auth state so Dashboard shows updated HP/XP/streak
       if (data.updatedPlayer) {
         updateStats({
           healthScore: data.updatedPlayer.healthScore,
@@ -108,10 +106,10 @@ export default function PhishingChallenge() {
       }
       setResult({
         correct:       true,
-        healthChange:  data.healthChange,
-        xpGained:      data.xpGained,
-        explanation:   data.explanation || levelData.explanation,
-        realWorldStat: data.realWorldStat || pickStat(),
+        healthChange:  data.healthChange ?? levelData.healthReward,
+        xpGained:      data.xpGained    ?? levelData.xpReward,
+        explanation:   levelData.explanation,
+        realWorldStat: pickStat(),
         local:         false,
       });
     } catch (err) {

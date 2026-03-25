@@ -17,8 +17,8 @@ import ScenarioRouter  from "./pages/ScenarioRouter";
 // Modules — training order kept intact
 import PhishingChallenge from "./modules/phishing/pages/PhishingChallenge";
 import PasswordChallenge from "./modules/password/pages/PasswordChallenge";
-import SocialChallenge   from "./modules/social/pages/SocialChallenge";
-import MalwareChallenge  from "./modules/malware/pages/MalwareChallenge";
+import SocialChallenge   from "./pages/SocialChallenge";
+import MalwareChallenge  from "./pages/MalwareChallenge";
 
 // Styles
 import "./styles/global.css";

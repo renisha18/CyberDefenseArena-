@@ -5,13 +5,13 @@
 
 export const ROOMS = [
   { id: "server",   label: "SERVER ROOM",    module: "malware",  baseThreat: 1, x: 55,  y: 75,  w: 175, h: 125 },
-  { id: "security", label: "SECURITY OPS",   module: "network",  baseThreat: 0, x: 295, y: 58,  w: 155, h: 108 },
-  { id: "network",  label: "NETWORK HUB",    module: "network",  baseThreat: 2, x: 510, y: 75,  w: 148, h: 98  },
+  { id: "security", label: "SECURITY OPS",   module: "malware",  baseThreat: 0, x: 295, y: 58,  w: 155, h: 108 },
+  { id: "network",  label: "NETWORK HUB",    module: "malware",  baseThreat: 2, x: 510, y: 75,  w: 148, h: 98  },
   { id: "hr",       label: "HR STATION",     module: "phishing", baseThreat: 1, x: 75,  y: 262, w: 128, h: 98  },
   { id: "work1",    label: "WORKSTATIONS A", module: "phishing", baseThreat: 1, x: 265, y: 244, w: 155, h: 108 },
   { id: "work2",    label: "WORKSTATIONS B", module: "password", baseThreat: 0, x: 482, y: 234, w: 148, h: 108 },
   { id: "exec",     label: "EXEC SUITE",     module: "social",   baseThreat: 2, x: 155, y: 412, w: 138, h: 98  },
-  { id: "db",       label: "DATABASE",       module: "malware",  baseThreat: 1, x: 355, y: 392, w: 128, h: 118 },
+  { id: "db",       label: "DATABASE",       module: "social",   baseThreat: 1, x: 355, y: 392, w: 128, h: 118 },
 ];
 
 // Corridor adjacency — threat spread map

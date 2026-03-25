@@ -142,11 +142,14 @@ const ChallengeController = {
         });
       }
 
-      // ── 5. One challenge per day rule ─────────────────────────────────
-      const doneToday = await UserChallengeModel.completedToday(userId);
-      if (doneToday) {
+      // ── 5. One challenge per MODULE per day rule ──────────────────────
+      const doneThisModuleToday = await UserChallengeModel.completedModuleToday(
+        userId,
+        challenge.category
+      );
+      if (doneThisModuleToday) {
         return res.status(429).json({
-          error: "You have already completed a challenge today. Come back tomorrow!",
+          error: `You've already completed a ${challenge.category} challenge today. Try a different module or come back tomorrow!`,
           retryAfter: "tomorrow",
         });
       }
@@ -170,11 +173,17 @@ const ChallengeController = {
       const updated = await UserModel.findById(userId);
 
       return res.status(200).json({
-        message:        `Challenge "${challenge.title}" completed!`,
-        healthReward:   challenge.health_reward,
-        xpReward:       challenge.xp_reward,
-        streak:         newStreak,
+        message:      `Challenge "${challenge.title}" completed!`,
+        healthChange: challenge.health_reward,
+        xpGained:     challenge.xp_reward,
+        streak:       newStreak,
+        // both keys so any module page works regardless of which it reads
         player: {
+          healthScore: updated.health_score,
+          xp:          updated.xp,
+          streak:      updated.streak,
+        },
+        updatedPlayer: {
           healthScore: updated.health_score,
           xp:          updated.xp,
           streak:      updated.streak,

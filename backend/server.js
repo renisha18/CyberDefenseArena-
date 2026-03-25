@@ -13,14 +13,14 @@ const challengeRoutes   = require("./routes/challengeRoutes");
 const leaderboardRoutes = require("./routes/leaderboardRoutes");
 
 const app  = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // ── CORS ──────────────────────────────────────────────────────────────────
 // credentials: true is required so the browser sends/receives cookies
 // across the localhost:5173 ↔ localhost:5000 origin boundary.
 app.use(cors({
-  origin:      process.env.FRONTEND_URL || "http://localhost:5173",
-  credentials: true,   // ← MUST be true for cookies to work
+  origin:      process.env.FRONTEND_URL || "http://localhost:5174",
+  credentials: true,
 }));
 
 // ── Body + Cookie parsing ─────────────────────────────────────────────────

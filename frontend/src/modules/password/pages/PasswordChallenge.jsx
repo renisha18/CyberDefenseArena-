@@ -63,10 +63,10 @@ export default function PasswordChallenge() {
         }
         setResult({
           correct:       true,
-          healthChange:  data.healthChange || levelData.healthReward,
-          xpGained:      data.xpGained    || levelData.xpReward,
+          healthChange:  data.healthChange ?? levelData.healthReward,
+          xpGained:      data.xpGained    ?? levelData.xpReward,
           explanation:   levelData.explanation,
-          realWorldStat: data.realWorldStat || pickStat(),
+          realWorldStat: pickStat(),
         });
       } catch (err) {
         setBlockMsg(err.message);

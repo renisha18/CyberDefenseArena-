@@ -40,19 +40,11 @@ export default function Dashboard() {
   const [checkingStatus, setCheckingStatus] = useState(true);
 
   // Real values from DB via AuthContext
-  const hp        = user?.healthScore        ?? 70;
+  const hp        = user?.healthScore        ?? 50;
   const xp        = user?.xp                 ?? 0;
   const streak    = user?.streak             ?? 0;
   const username  = user?.username           ?? "";
   const completed = user?.completedChallenges ?? 0;
-
-  // Sync player's real HP into GameStateContext when they load the dashboard
-  // This ensures rooms start at the correct health on first visit and after refresh
-  useEffect(() => {
-    if (user?.healthScore !== undefined) {
-      dispatch({ type: "SYNC_HEALTH", payload: { healthScore: user.healthScore } });
-    }
-  }, [user?.healthScore]); // eslint-disable-line
 
   // Fetch how many modules completed today for the status pill (0–4)
   useEffect(() => {

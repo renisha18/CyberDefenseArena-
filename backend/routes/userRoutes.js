@@ -11,6 +11,9 @@ router.use(protect);
 // GET /api/user/dashboard
 router.get("/dashboard", UserController.getDashboard);
 
+// GET /api/user/completed-scenarios
+router.get("/completed-scenarios", UserController.getCompletedScenarios);
+
 // GET /api/user/profile
 router.get("/profile", UserController.getProfile);
 

@@ -36,6 +36,32 @@ const UserController = {
     }
   },
 
+  // GET /api/user/completed-scenarios
+  // Returns completed challenge IDs as "category-level" strings for ScenarioRouter.
+  // Maps DB challenge rows to the scenarioEngine id format (e.g. "phishing-1").
+  async getCompletedScenarios(req, res) {
+    try {
+      const userId = req.user.id;
+      const rows   = await UserChallengeModel.getByUser(userId);
+      const completed = rows
+        .filter((uc) => uc.completed)
+        .map((uc) => uc.challenge_id);
+
+      // Fetch all challenges to build category-level ids
+      const db = require("../config/db");
+      const [challenges] = await db.execute(
+        "SELECT id, category, level FROM challenges WHERE id IN (?)",
+        [completed.length ? completed : [0]]
+      );
+
+      const ids = challenges.map((c) => `${c.category}-${c.level}`);
+      return res.status(200).json({ completedIds: ids });
+    } catch (err) {
+      console.error("[User] CompletedScenarios error:", err.message);
+      return res.status(500).json({ error: "Server error." });
+    }
+  },
+
   async getProfile(req, res) {
     try {
       const userId   = req.user.id;

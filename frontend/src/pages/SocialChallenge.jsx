@@ -5,16 +5,16 @@
 
 import { useState, useEffect }    from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAuth }                from "../../../context/AuthContext";
-import api                        from "../../../services/api";
-import Scanlines                  from "../../../components/Scanlines";
-import MatrixRain                 from "../../../components/MatrixRain";
-import { SmallLogo }              from "../../../components/PixelIcons";
+import { useAuth }                from "../context/AuthContext";
+import api                        from "../services/api";
+import Scanlines                  from "../components/Scanlines";
+import MatrixRain                 from "../components/MatrixRain";
+import { SmallLogo }              from "../components/PixelIcons";
 import SOCIAL_LEVELS, {
   getLevelData,
   TOTAL_LEVELS,
   DB_CHALLENGE_ID,
-} from "../data/socialLevels";
+} from "../modules/social/data/socialLevels";
 
 const STATS = [
   "98% of cyber attacks rely on social engineering.",
@@ -382,9 +382,9 @@ export default function SocialChallenge() {
     if (isLastLevel && isCorrect) {
       setSubmitting(true);
       try {
-        const { data } = await api.post("/challenges/complete", { challengeId: DB_CHALLENGE_ID, isCorrect: true });
+        const { data } = await api.post("/challenges/complete", { challengeId: DB_CHALLENGE_ID });
         if (data.updatedPlayer) updateStats({ healthScore: data.updatedPlayer.healthScore, xp: data.updatedPlayer.xp, streak: data.updatedPlayer.streak });
-        setResult({ correct: true, healthChange: data.healthChange || levelData.healthReward, xpGained: data.xpGained || levelData.xpReward, realWorldStat: data.realWorldStat || pickStat() });
+        setResult({ correct: true, healthChange: data.healthChange ?? levelData.healthReward, xpGained: data.xpGained ?? levelData.xpReward, realWorldStat: pickStat() });
       } catch (err) {
         setBlockMsg(err.message);
         setResult({ correct: true, healthChange: levelData.healthReward, xpGained: levelData.xpReward, realWorldStat: pickStat(), serverMsg: err.message });
