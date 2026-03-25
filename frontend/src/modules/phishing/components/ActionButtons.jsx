@@ -1,10 +1,11 @@
 // ── src/modules/phishing/components/ActionButtons.jsx ────────────────────
 // Decision panel: Report Phishing, Open Link/Download, Inspect.
 // Red flag hints are revealed one-by-one as the player clicks "Inspect".
+// Button colors are neutral until the player has answered.
 
 import { useState } from "react";
 
-export default function ActionButtons({ level, onAction, onInspect, disabled }) {
+export default function ActionButtons({ level, onAction, onInspect, disabled, result }) {
   const [revealedFlags, setRevealedFlags] = useState([]);
 
   function revealNextFlag() {
@@ -17,6 +18,15 @@ export default function ActionButtons({ level, onAction, onInspect, disabled }) 
   const hasLink       = !!level.link;
   const hasAttachment = !!level.attachment;
   const actionLabel   = hasAttachment ? "⬇ Download & Open Attachment" : "🔗 Click The Link";
+
+  // Only apply correct/wrong colors after the player has answered
+  const reportClass = result
+    ? `action-btn ${result.correct ? "action-btn--correct" : "action-btn--neutral"}`
+    : "action-btn action-btn--neutral";
+
+  const clickClass = result
+    ? `action-btn ${!result.correct ? "action-btn--wrong" : "action-btn--neutral"}`
+    : "action-btn action-btn--neutral";
 
   return (
     <div className="action-panel">
@@ -52,18 +62,18 @@ export default function ActionButtons({ level, onAction, onInspect, disabled }) 
 
         {/* Report button */}
         <button
-          className="action-btn action-btn--report"
+          className={reportClass}
           onClick={() => onAction("report")}
           disabled={disabled}
         >
           <span style={{ fontSize: "16px" }}>🛡</span>
-          REPORT PHISHING
+          REPORT MAIL
         </button>
 
         {/* Click/Download button */}
         {(hasLink || hasAttachment) && (
           <button
-            className="action-btn action-btn--click"
+            className={clickClass}
             onClick={() => onAction("click")}
             disabled={disabled}
           >

@@ -210,8 +210,9 @@ function ChoiceOptions({ level, onSubmit, disabled }) {
         let bgColor     = "#000d1a";
         let textColor   = "#c8e0f0";
         if (revealed) {
-          if (isCorrect)            { borderColor = "#39ff14"; bgColor = "rgba(57,255,20,.06)"; textColor = "#39ff14"; }
-          else if (isChosen)        { borderColor = "#ff2d55"; bgColor = "rgba(255,45,85,.06)"; textColor = "#ff2d55"; }
+          if (isChosen && isCorrect)  { borderColor = "#39ff14"; bgColor = "rgba(57,255,20,.06)"; textColor = "#39ff14"; }
+          else if (isChosen)          { borderColor = "#ff2d55"; bgColor = "rgba(255,45,85,.06)"; textColor = "#ff2d55"; }
+          // unselected options stay neutral — no color leak
         } else if (isChosen) {
           borderColor = "#ffd700"; bgColor = "rgba(255,215,0,.05)"; textColor = "#ffd700";
         }
@@ -232,7 +233,7 @@ function ChoiceOptions({ level, onSubmit, disabled }) {
             </span>
             <div style={{ flex: 1 }}>
               <div>{opt.label}</div>
-              {revealed && (
+              {revealed && isChosen && (
                 <div style={{ marginTop: "6px", fontSize: "5px", color: isCorrect ? "#39ff14" : "rgba(255,45,85,.8)" }}>
                   {isCorrect ? "✓ CORRECT" : "✗ "}{!isCorrect && !opt.safe ? "This exposes the company to attack" : ""}
                 </div>

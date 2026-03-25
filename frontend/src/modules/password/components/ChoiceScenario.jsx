@@ -22,8 +22,12 @@ export default function ChoiceScenario({ level, onSubmit, disabled }) {
   }
 
   function getOptionClass(opt) {
-    if (!revealed) return selected === opt.id ? "pwd-option pwd-option--selected" : "pwd-option";
-    if (opt.id === level.correctId) return "pwd-option pwd-option--correct pwd-option--reveal";
+    if (!revealed) {
+      return selected === opt.id ? "pwd-option pwd-option--selected" : "pwd-option";
+    }
+    // Only color the option the player actually selected, plus highlight correct
+    if (opt.id === level.correctId && opt.id === selected) return "pwd-option pwd-option--correct pwd-option--reveal";
+    if (opt.id === level.correctId) return "pwd-option pwd-option--reveal";
     if (opt.id === selected && selected !== level.correctId) return "pwd-option pwd-option--wrong";
     return "pwd-option";
   }
@@ -45,8 +49,8 @@ export default function ChoiceScenario({ level, onSubmit, disabled }) {
               <div className="pwd-option__text" style={{ fontFamily: "var(--pixel)", fontSize: "6px" }}>
                 {opt.label}
               </div>
-              {/* Reveal reason after answer */}
-              {revealed && (
+              {/* Only show reason on selected option and the correct one */}
+              {revealed && (opt.id === selected || opt.id === level.correctId) && (
                 <div style={{
                   fontFamily: "var(--pixel)", fontSize: "5px",
                   color: opt.id === level.correctId ? "#39ff14" : "rgba(255,45,85,.8)",
@@ -56,12 +60,13 @@ export default function ChoiceScenario({ level, onSubmit, disabled }) {
                 </div>
               )}
             </div>
-            {revealed && (
+            {/* Only show badge on the option the player selected, or the correct one */}
+            {revealed && (opt.id === selected || opt.id === level.correctId) && (
               <span className="pwd-option__badge" style={{
                 color: opt.id === level.correctId ? "#39ff14" : "#ff2d55",
                 borderColor: opt.id === level.correctId ? "#39ff14" : "#ff2d55",
               }}>
-                {opt.id === level.correctId ? "CORRECT" : opt.safe ? "SAFE" : "RISKY"}
+                {opt.id === level.correctId ? "CORRECT" : "WRONG"}
               </span>
             )}
           </button>

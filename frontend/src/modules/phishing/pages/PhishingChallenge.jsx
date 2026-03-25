@@ -222,6 +222,7 @@ export default function PhishingChallenge() {
           onAction={handleAction}
           onInspect={() => setShowInspect(true)}
           disabled={!!result || submitting}
+          result={result}
         />
       </div>
 

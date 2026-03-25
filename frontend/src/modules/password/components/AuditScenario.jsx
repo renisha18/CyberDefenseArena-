@@ -78,17 +78,17 @@ export default function AuditScenario({ level, onSubmit, disabled }) {
               )}
             </div>
             <div className="pwd-audit-row__meta">
-              <span style={{ fontFamily: "var(--pixel)", fontSize: "4px", color: account.mfa ? "#39ff14" : "#ff2d55" }}>
+              <span style={{ fontFamily: "var(--pixel)", fontSize: "4px", color: revealed ? (account.mfa ? "#39ff14" : "#ff2d55") : "rgba(0,245,255,.6)" }}>
                 {account.mfa ? "MFA ✓" : "NO MFA"}
               </span>
               <span style={{ fontFamily: "var(--pixel)", fontSize: "4px", color: "rgba(0,245,255,.4)" }}>
                 {account.lastChanged}
               </span>
               <span className="pwd-audit-row__risk" style={{
-                color:        RISK_COLORS[account.risk],
-                borderColor:  RISK_COLORS[account.risk],
+                color:        revealed ? RISK_COLORS[account.risk] : "rgba(0,245,255,.4)",
+                borderColor:  revealed ? RISK_COLORS[account.risk] : "rgba(0,245,255,.2)",
               }}>
-                {RISK_LABELS[account.risk]}
+                {revealed ? RISK_LABELS[account.risk] : "???"}
               </span>
             </div>
           </div>

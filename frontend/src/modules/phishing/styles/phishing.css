@@ -148,21 +148,25 @@
   display: flex; align-items: center; gap: 10px;
   transition: all .15s; background: transparent;
 }
-.action-btn--report {
+/* Default — neutral cyan, no answer hint */
+.action-btn--neutral {
+  color: #00f5ff; border-color: rgba(0,245,255,.4);
+  box-shadow: 0 0 8px rgba(0,245,255,.1);
+}
+.action-btn--neutral:hover:not(:disabled) {
+  background: rgba(0,245,255,.07);
+  border-color: #00f5ff;
+  box-shadow: 0 0 16px rgba(0,245,255,.3);
+}
+/* After answer — correct action */
+.action-btn--correct {
   color: #39ff14; border-color: #39ff14;
   box-shadow: 0 0 10px rgba(57,255,20,.3);
 }
-.action-btn--report:hover {
-  background: #39ff14; color: #0a0e1a;
-  box-shadow: 0 0 24px rgba(57,255,20,.6);
-}
-.action-btn--click {
+/* After answer — wrong action */
+.action-btn--wrong {
   color: #ff2d55; border-color: #ff2d55;
   box-shadow: 0 0 10px rgba(255,45,85,.2);
-}
-.action-btn--click:hover {
-  background: rgba(255,45,85,.15);
-  box-shadow: 0 0 18px rgba(255,45,85,.5);
 }
 .action-btn:disabled { opacity: .45; cursor: not-allowed; }
 
