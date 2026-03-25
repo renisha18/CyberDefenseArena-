@@ -8,6 +8,7 @@ import ProtectedRoute                    from "./routes/ProtectedRoute";
 import LandingPage     from "./pages/LandingPage";
 import LoginPage       from "./pages/LoginPage";
 import SignupPage      from "./pages/SignupPage";
+import IntroPage       from "./pages/IntroPage";
 import Dashboard       from "./pages/Dashboard";
 import LeaderboardPage from "./pages/LeaderboardPage";
 import TrainingPage    from "./pages/TrainingPage";
@@ -45,6 +46,7 @@ function AppRoutes() {
       <Route path="/login"       element={<LoginPage />} />
       <Route path="/signup"      element={<SignupPage />} />
       <Route path="/leaderboard" element={<LeaderboardPage />} />
+      <Route path="/intro"       element={<ProtectedRoute><IntroPage /></ProtectedRoute>} />
 
       {/* Dashboard + Training */}
       <Route path="/main"     element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

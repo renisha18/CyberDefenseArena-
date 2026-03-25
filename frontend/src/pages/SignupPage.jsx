@@ -41,12 +41,13 @@ export default function SignupPage() {
 
     setLoading(true);
     try {
-      await signup({
+      const createdUser = await signup({
         username: form.username.trim(),
         email:    form.email.trim(),
         password: form.password,
       });
-      navigate("/main");
+      sessionStorage.setItem(`cda:intro:pending:${createdUser.id}`, "1");
+      navigate("/intro", { replace: true });
     } catch (err) {
       setApiError(err.message);
     } finally {

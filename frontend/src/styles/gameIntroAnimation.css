@@ -1,0 +1,220 @@
+.intro-wrap {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 30% 20%, #122030 0%, #0a0e1a 45%, #060912 100%);
+  overflow: hidden;
+}
+
+.intro-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(rgba(0, 245, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 245, 255, 0.06) 1px, transparent 1px);
+  background-size: 32px 32px;
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.intro-panel {
+  position: relative;
+  z-index: 1;
+  width: min(560px, 92vw);
+  padding: 22px;
+  border: 2px solid rgba(0, 245, 255, 0.35);
+  background: rgba(6, 10, 18, 0.84);
+  box-shadow: 0 0 28px rgba(0, 245, 255, 0.15), inset 0 0 30px rgba(0, 245, 255, 0.05);
+}
+
+.intro-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.intro-node {
+  height: 62px;
+  border: 1px solid rgba(0, 245, 255, 0.22);
+  background: #0f1a2d;
+  transition: all 0.5s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.intro-node--idle {
+  box-shadow: inset 0 0 0 rgba(0, 245, 255, 0);
+}
+
+.intro-node--threat {
+  background: #2a0f16;
+  border-color: #ff2d55;
+  box-shadow: 0 0 18px rgba(255, 45, 85, 0.7);
+  animation: pulseRed 0.8s infinite;
+}
+
+.intro-node--spread {
+  background: #2b1f11;
+  border-color: #ff8c00;
+  box-shadow: 0 0 14px rgba(255, 140, 0, 0.55);
+  animation: pulseOrange 1.2s infinite;
+}
+
+.intro-node--recovering {
+  background: #132419;
+  border-color: #39ff14;
+  box-shadow: 0 0 12px rgba(57, 255, 20, 0.4);
+}
+
+.intro-node--shield {
+  background: #153720;
+  border-color: #39ff14;
+  box-shadow: 0 0 26px rgba(57, 255, 20, 0.8);
+  animation: shieldFlash 0.8s ease-out infinite alternate;
+}
+
+.intro-node--safe {
+  background: #11231a;
+  border-color: #39ff14;
+  box-shadow: 0 0 9px rgba(57, 255, 20, 0.35);
+}
+
+.intro-node--glitch::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0 4px,
+    rgba(255, 255, 255, 0.12) 4px 5px
+  );
+  animation: glitch 0.45s infinite;
+  pointer-events: none;
+}
+
+.intro-shield {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: #c6ffd0;
+  text-shadow: 0 0 10px rgba(57, 255, 20, 0.85);
+}
+
+.intro-caption {
+  font-family: "Courier New", monospace;
+  color: #7effd2;
+  font-size: clamp(16px, 2.7vw, 24px);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  border-right: 2px solid rgba(126, 255, 210, 0.85);
+  width: 100%;
+  animation: typeIn 1.1s steps(38, end), blinkCursor 0.7s step-end infinite;
+}
+
+.intro-subtitle {
+  margin-top: 10px;
+  font-family: "Courier New", monospace;
+  font-size: 11px;
+  color: rgba(0, 245, 255, 0.62);
+  letter-spacing: 1px;
+}
+
+.intro-skip {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 2;
+  background: transparent;
+  color: #00f5ff;
+  border: 1px solid rgba(0, 245, 255, 0.45);
+  font-family: "Courier New", monospace;
+  font-size: 12px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.intro-skip:hover {
+  background: rgba(0, 245, 255, 0.08);
+  box-shadow: 0 0 12px rgba(0, 245, 255, 0.35);
+}
+
+@keyframes pulseRed {
+  0% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.03);
+    filter: brightness(1.16);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+@keyframes pulseOrange {
+  0% {
+    filter: saturate(100%);
+  }
+  50% {
+    filter: saturate(130%);
+  }
+  100% {
+    filter: saturate(100%);
+  }
+}
+
+@keyframes shieldFlash {
+  from {
+    box-shadow: 0 0 12px rgba(57, 255, 20, 0.45);
+  }
+  to {
+    box-shadow: 0 0 28px rgba(57, 255, 20, 0.95);
+  }
+}
+
+@keyframes glitch {
+  0% {
+    transform: translateX(0);
+    opacity: 0.35;
+  }
+  20% {
+    transform: translateX(-1px);
+    opacity: 0.18;
+  }
+  40% {
+    transform: translateX(2px);
+    opacity: 0.4;
+  }
+  60% {
+    transform: translateX(-2px);
+    opacity: 0.2;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 0.32;
+  }
+}
+
+@keyframes typeIn {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes blinkCursor {
+  50% {
+    border-color: transparent;
+  }
+}
