@@ -71,3 +71,33 @@ export function computeSecurityScore(rooms) {
   const vals = Object.values(rooms);
   return Math.round(vals.reduce((sum, r) => sum + r.health, 0) / vals.length);
 }
+
+/**
+ * Apply a strategic player action to a specific room.
+ * Actions:
+ *   isolate — clears all threats (room goes dark, no module bonus)
+ *   patch   — heals +20 HP
+ *   ignore  — no change (explicit no-op, recorded for chain attack logic)
+ */
+export function applyPlayerAction(rooms, roomId, action) {
+  const updated = { ...rooms };
+  const room    = { ...updated[roomId] };
+  if (!room) return rooms;
+
+  if (action === "isolate") {
+    room.threats  = 0;
+    room.isolated = true;
+  } else if (action === "patch") {
+    room.health   = Math.min(100, room.health + 20);
+    room.isolated = false;
+  } else if (action === "ignore") {
+    // Ignoring a threatened room escalates threats over time
+    if (room.threats > 0) {
+      room.health  = Math.max(0, room.health - 8);
+      room.threats = Math.min(5, room.threats + 1);
+    }
+  }
+
+  updated[roomId] = room;
+  return spreadThreats(updated);
+}

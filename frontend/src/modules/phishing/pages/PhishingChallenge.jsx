@@ -9,6 +9,7 @@
 import { useState, useEffect }    from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth }                from "../../../context/AuthContext";
+import { useGameState }           from "../../../context/GameStateContext";
 import api                        from "../../../services/api";
 import Scanlines                  from "../../../components/Scanlines";
 import MatrixRain                 from "../../../components/MatrixRain";
@@ -28,6 +29,7 @@ export default function PhishingChallenge() {
   const { level: levelParam } = useParams();
   const navigate              = useNavigate();
   const { user, updateStats } = useAuth();
+  const { dispatch: gameDispatch } = useGameState();
 
   const uiLevel   = Math.min(Math.max(parseInt(levelParam) || 1, 1), TOTAL_LEVELS);
   const levelData = getLevelData(uiLevel);
@@ -37,6 +39,7 @@ export default function PhishingChallenge() {
   const [glitch,      setGlitch]      = useState(false);
   const [submitting,  setSubmitting]  = useState(false);
   const [blockMsg,    setBlockMsg]    = useState("");
+  const [wrongStreak, setWrongStreak] = useState(0);
 
   // Reset state on level change
   useEffect(() => {
@@ -58,70 +61,54 @@ export default function PhishingChallenge() {
 
     const isCorrect = action === levelData.correctAction;
 
-    // Trigger glitch animation on wrong answer
     if (!isCorrect) {
       setGlitch(true);
       setTimeout(() => setGlitch(false), 500);
     }
 
-    // For levels 1–4: resolve locally, no backend call
-    if (!isLastLevel) {
-      setResult({
-        correct:       isCorrect,
-        healthChange:  isCorrect ?  levelData.healthReward : -levelData.healthPenalty,
-        xpGained:      isCorrect ?  levelData.xpReward     : 0,
-        explanation:   levelData.explanation,
-        realWorldStat: pickStat(),
-        local:         true, // flag: not yet persisted to DB
-      });
-      return;
-    }
-
-    // ── Final level: submit to backend ────────────────────────────────
-    if (!isCorrect) {
-      // Wrong on final level — show result locally, don't call backend
-      setResult({
-        correct:       false,
-        healthChange:  -levelData.healthPenalty,
-        xpGained:      0,
-        explanation:   levelData.explanation,
-        realWorldStat: pickStat(),
-        local:         true,
-      });
-      return;
-    }
-
-    // Correct on final level — persist to DB
+    // Every level now submits to DB
     setSubmitting(true);
     try {
-      const { data } = await api.post("/challenges/complete", {
+      const { data } = await api.post("/challenges/submit", {
         challengeId: DB_CHALLENGE_ID,
+        uiLevel,
+        correct:     isCorrect,
+        wrongStreak,
       });
+
+      if (!isCorrect) setWrongStreak((w) => w + 1);
+      else            setWrongStreak(0);
+
       if (data.updatedPlayer) {
-        updateStats({
-          healthScore: data.updatedPlayer.healthScore,
-          xp:          data.updatedPlayer.xp,
-          streak:      data.updatedPlayer.streak,
-        });
+        updateStats(data.updatedPlayer);
       }
+
+      // Update office map
+      gameDispatch({ type: "SCENARIO_RESULT", payload: { module: "phishing", correct: isCorrect } });
+
+      // Trigger crisis if backend says so
+      if (data.crisis) {
+        gameDispatch({ type: "CRISIS", payload: data.crisis });
+      }
+
       setResult({
-        correct:       true,
-        healthChange:  data.healthChange ?? levelData.healthReward,
-        xpGained:      data.xpGained    ?? levelData.xpReward,
+        correct:       isCorrect,
+        healthChange:  data.healthChange,
+        xpGained:      data.xpGained,
+        streakMultiplier: data.streakMultiplier,
         explanation:   levelData.explanation,
         realWorldStat: pickStat(),
-        local:         false,
+        chainAttack:   data.chainAttack,
+        crisis:        data.crisis,
       });
     } catch (err) {
-      // 429 = already completed today, 409 = already done, 403 = locked
-      // Still show a local success so the player gets feedback
+      // Network error — fall back to local result so player isn't blocked
       setResult({
-        correct:       true,
-        healthChange:  levelData.healthReward,
-        xpGained:      levelData.xpReward,
+        correct:       isCorrect,
+        healthChange:  isCorrect ? levelData.healthReward : -levelData.healthPenalty,
+        xpGained:      isCorrect ? levelData.xpReward : 0,
         explanation:   levelData.explanation,
         realWorldStat: pickStat(),
-        local:         true,
         serverMsg:     err.message,
       });
     } finally {
@@ -139,7 +126,10 @@ export default function PhishingChallenge() {
     setGlitch(false);
   }
 
-  function handleExit() { navigate("/main"); }
+  function handleExit() {
+    setWrongStreak(0);
+    navigate("/main");
+  }
 
   return (
     <div className="phishing-page">

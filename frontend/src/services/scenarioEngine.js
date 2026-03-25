@@ -70,3 +70,33 @@ export function getNextScenario(completedIds = [], streak = 0) {
 
   return null; // all 20 complete
 }
+
+/**
+ * Generate a daily queue of 4 scenarios — one per module, mixed randomly.
+ * Ensures variety: never two of the same module in a day.
+ * @param {string[]} completedIds
+ * @param {number}   streak
+ * @returns {object[]}  array of up to 4 scenarios (one per module)
+ */
+export function generateDailyQueue(completedIds = [], streak = 0) {
+  const done    = new Set(completedIds);
+  const modules = ["phishing", "password", "social", "malware"];
+
+  const maxRank = streak >= 10 ? 5
+               : streak >= 5  ? 4
+               : streak >= 3  ? 3
+               : streak >= 1  ? 2
+               :                1;
+
+  return modules.map((mod) => {
+    const pool = ALL_SCENARIOS.filter(
+      (s) => s.module === mod && !done.has(s.id) && s.rankScore <= maxRank
+    );
+    if (pool.length === 0) {
+      // All done for this module — pick any remaining regardless of rank
+      const any = ALL_SCENARIOS.filter((s) => s.module === mod && !done.has(s.id));
+      return any.length > 0 ? any[Math.floor(Math.random() * any.length)] : null;
+    }
+    return pool[Math.floor(Math.random() * pool.length)];
+  }).filter(Boolean);
+}

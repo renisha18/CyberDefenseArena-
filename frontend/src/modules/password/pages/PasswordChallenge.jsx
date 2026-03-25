@@ -5,7 +5,7 @@
 import { useState, useEffect }    from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth }                from "../../../context/AuthContext";
-import api                        from "../../../services/api";
+import { useModuleSubmit }        from "../../../hooks/useModuleSubmit";
 import Scanlines                  from "../../../components/Scanlines";
 import MatrixRain                 from "../../../components/MatrixRain";
 import { SmallLogo }              from "../../../components/PixelIcons";
@@ -31,14 +31,14 @@ const pickStat = () => REAL_WORLD_STATS[Math.floor(Math.random() * REAL_WORLD_ST
 export default function PasswordChallenge() {
   const { level: levelParam } = useParams();
   const navigate              = useNavigate();
-  const { user, updateStats } = useAuth();
+  const { user }                                    = useAuth();
+  const { submit, submitting, resetWrongStreak }    = useModuleSubmit("password", DB_CHALLENGE_ID);
 
   const uiLevel   = Math.min(Math.max(parseInt(levelParam) || 1, 1), TOTAL_LEVELS);
   const levelData = getLevelData(uiLevel);
 
-  const [result,     setResult]     = useState(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [blockMsg,   setBlockMsg]   = useState("");
+  const [result,   setResult]   = useState(null);
+  const [blockMsg, setBlockMsg] = useState("");
 
   useEffect(() => { setResult(null); setBlockMsg(""); }, [uiLevel]);
 
@@ -48,48 +48,18 @@ export default function PasswordChallenge() {
   const hp          = user?.healthScore ?? 70;
   const hpCol       = hp >= 60 ? "#39ff14" : hp >= 30 ? "#ffd700" : "#ff2d55";
 
-  // ── Handle scenario submission ────────────────────────────────────────
   async function handleSubmit(isCorrect) {
-    if (isLastLevel && isCorrect) {
-      // Final level correct → persist to DB
-      setSubmitting(true);
-      try {
-        const { data } = await api.post("/challenges/complete", {
-          challengeId: DB_CHALLENGE_ID,
-          isCorrect:   true,
-        });
-        if (data.updatedPlayer) {
-          updateStats({ healthScore: data.updatedPlayer.healthScore, xp: data.updatedPlayer.xp, streak: data.updatedPlayer.streak });
-        }
-        setResult({
-          correct:       true,
-          healthChange:  data.healthChange ?? levelData.healthReward,
-          xpGained:      data.xpGained    ?? levelData.xpReward,
-          explanation:   levelData.explanation,
-          realWorldStat: pickStat(),
-        });
-      } catch (err) {
-        setBlockMsg(err.message);
-        setResult({
-          correct:       true,
-          healthChange:  levelData.healthReward,
-          xpGained:      levelData.xpReward,
-          explanation:   levelData.explanation,
-          realWorldStat: pickStat(),
-          serverMsg:     err.message,
-        });
-      } finally {
-        setSubmitting(false);
-      }
-    } else {
-      // Local result (levels 1–4, or wrong on 5)
-      setResult({
-        correct:       isCorrect,
-        healthChange:  isCorrect ? levelData.healthReward : -levelData.healthPenalty,
-        xpGained:      isCorrect ? levelData.xpReward     : 0,
-        explanation:   levelData.explanation,
-        realWorldStat: pickStat(),
-      });
+    const res = await submit(isCorrect, uiLevel, levelData);
+    setResult({
+      correct:       res.correct,
+      healthChange:  res.healthChange,
+      xpGained:      res.xpGained,
+      explanation:   levelData.explanation,
+      realWorldStat: pickStat(),
+      chainAttack:   res.chainAttack,
+    });
+    if (!isCorrect && res.chainAttack) {
+      setBlockMsg(`⚠ CHAIN ATTACK: ${res.chainAttack.message}`);
     }
   }
 

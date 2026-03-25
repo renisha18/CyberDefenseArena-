@@ -24,17 +24,25 @@ async function seed() {
   // ── users ────────────────────────────────────────────────────────────
   await conn.execute(`
     CREATE TABLE IF NOT EXISTS users (
-      id           INT          PRIMARY KEY AUTO_INCREMENT,
-      username     VARCHAR(50)  NOT NULL UNIQUE,
-      email        VARCHAR(100) NOT NULL UNIQUE,
-      password     VARCHAR(255) NOT NULL,
-      health_score INT          NOT NULL DEFAULT 50,
-      xp           INT          NOT NULL DEFAULT 0,
-      streak       INT          NOT NULL DEFAULT 0,
-      last_active  DATE         DEFAULT NULL,
-      created_at   TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+      id                INT          PRIMARY KEY AUTO_INCREMENT,
+      username          VARCHAR(50)  NOT NULL UNIQUE,
+      email             VARCHAR(100) NOT NULL UNIQUE,
+      password          VARCHAR(255) NOT NULL,
+      health_score      INT          NOT NULL DEFAULT 50,
+      xp                INT          NOT NULL DEFAULT 0,
+      streak            INT          NOT NULL DEFAULT 0,
+      last_active       DATE         DEFAULT NULL,
+      attacks_prevented INT          NOT NULL DEFAULT 0,
+      breaches_caused   INT          NOT NULL DEFAULT 0,
+      created_at        TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
     )
   `);
+  // Safe migration — add new columns to existing tables if they don't exist
+  await conn.execute(`
+    ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS attacks_prevented INT NOT NULL DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS breaches_caused   INT NOT NULL DEFAULT 0
+  `).catch(() => {}); // ignore if already exists (older MySQL)
   console.log("[Seed] Table: users ✓");
 
   // ── challenges ───────────────────────────────────────────────────────
@@ -67,7 +75,6 @@ async function seed() {
   `);
   console.log("[Seed] Table: user_challenges ✓");
 
-  // ── Seed challenges (skip if already present) ─────────────────────────
   const [existing] = await conn.execute(`SELECT COUNT(*) AS cnt FROM challenges`);
   if (existing[0].cnt === 0) {
     await conn.execute(`
@@ -75,36 +82,20 @@ async function seed() {
         (title, description, category, health_reward, xp_reward, level)
       VALUES
         ('Phishing Detection',
-         'A suspicious email arrives claiming to be from the CEO. Identify the red flags before acting.',
-         'phishing', 10, 20, 1),
+         'Identify phishing emails and social engineering attempts targeting your company.',
+         'phishing', 10, 50, 1),
 
         ('Social Engineering',
          'An unknown caller claims to be from IT support and asks for your network password.',
-         'social_engineering', 10, 25, 2),
+         'social', 10, 50, 2),
 
         ('Malware Recognition',
          'Your workstation shows unusual behaviour. Diagnose and quarantine the threat.',
-         'malware', 15, 30, 3),
+         'malware', 15, 50, 3),
 
         ('Password Security',
          'Audit the company password policy and identify which accounts are at risk.',
-         'password', 10, 25, 4),
-
-        ('Network Intrusion',
-         'Unusual traffic patterns detected on the network hub. Trace and block the source.',
-         'network', 20, 40, 5),
-
-        ('Ransomware Response',
-         'Files are being encrypted across the company network. Execute the incident response plan.',
-         'malware', 20, 40, 6),
-
-        ('Insider Threat',
-         'Behavioural analytics flag a suspicious employee account. Investigate without alerting the suspect.',
-         'social_engineering', 15, 35, 7),
-
-        ('Zero-Day Exploit',
-         'A critical vulnerability has been discovered in a core system. Patch before adversaries strike.',
-         'network', 25, 50, 8)
+         'password', 10, 50, 4)
     `);
     console.log("[Seed] Challenges seeded ✓");
   } else {

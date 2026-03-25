@@ -1,25 +1,25 @@
 // ── src/components/StatusPanel.jsx ───────────────────────────────────────
-// Agent status panel on Dashboard.
-// All values come from props (real DB data via AuthContext) — nothing hardcoded.
+// Agent status panel — all values from DB via AuthContext, nothing hardcoded.
 
 export default function StatusPanel({
   health = 50,
   xp = 0,
   streak = 0,
   completedChallenges = 0,
+  attacksPrevented = 0,
+  breachesCaused = 0,
 }) {
   const healthColor = health > 60 ? "#39ff14" : health > 30 ? "#ffd700" : "#ff2d55";
-
-  const streakLabel =
-    streak === 0 ? "NO STREAK"
-    : streak === 1 ? "1 DAY"
-    : `${streak} DAYS`;
+  const streakLabel = streak === 0 ? "NO STREAK" : streak === 1 ? "1 DAY" : `${streak} DAYS`;
+  const streakColor = streak > 5 ? "#ff2d55" : streak > 2 ? "#ff8c00" : streak > 0 ? "#ffd700" : "rgba(0,245,255,.4)";
 
   const rows = [
-    { icon: "🛡", label: "SECURITY HEALTH", val: `${health}%`,          color: healthColor },
-    { icon: "⚡", label: "DAILY STREAK",    val: streakLabel,            color: streak > 0 ? "#ff8c00" : "rgba(0,245,255,.4)" },
-    { icon: "💀", label: "THREATS STOPPED", val: String(completedChallenges), color: "#ff2d55" },
-    { icon: "🎖", label: "XP EARNED",       val: String(xp),             color: "#ffd700" },
+    { icon: "🛡", label: "SECURITY HEALTH",   val: `${health}%`,              color: healthColor },
+    { icon: "⚡", label: "DAILY STREAK",       val: streakLabel,               color: streakColor },
+    { icon: "✅", label: "ATTACKS PREVENTED",  val: String(attacksPrevented),  color: "#39ff14"  },
+    { icon: "💀", label: "BREACHES CAUSED",    val: String(breachesCaused),    color: "#ff2d55"  },
+    { icon: "🎖", label: "XP EARNED",          val: String(xp),                color: "#ffd700"  },
+    { icon: "�", labeel: "CHALLENGES DONE",    val: String(completedChallenges), color: "#00f5ff" },
   ];
 
   return (

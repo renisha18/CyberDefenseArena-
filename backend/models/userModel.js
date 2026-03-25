@@ -4,6 +4,17 @@
 
 const db = require("../config/db");
 
+let combatColumnsCache = null;
+
+async function hasCombatColumns() {
+  if (combatColumnsCache !== null) return combatColumnsCache;
+
+  const [rows] = await db.execute("SHOW COLUMNS FROM users LIKE 'attacks_prevented'");
+  const [rows2] = await db.execute("SHOW COLUMNS FROM users LIKE 'breaches_caused'");
+  combatColumnsCache = rows.length > 0 && rows2.length > 0;
+  return combatColumnsCache;
+}
+
 const UserModel = {
   /**
    * Find a user by email address.
@@ -31,22 +42,37 @@ const UserModel = {
    * Find a user by primary key id.
    */
   async findById(id) {
+    const includeCombatColumns = await hasCombatColumns();
+    const baseFields = "id, username, email, health_score, xp, streak, last_active, created_at";
+    const extraFields = includeCombatColumns ? ", attacks_prevented, breaches_caused" : "";
+
     const [rows] = await db.execute(
-      "SELECT id, username, email, health_score, xp, streak, last_active, created_at FROM users WHERE id = ? LIMIT 1",
+      `SELECT ${baseFields}${extraFields}
+       FROM users WHERE id = ? LIMIT 1`,
       [id]
     );
-    return rows[0] || null;
+    const user = rows[0] || null;
+    if (!user) return null;
+
+    if (!includeCombatColumns) {
+      user.attacks_prevented = 0;
+      user.breaches_caused = 0;
+    }
+    return user;
   },
 
   /**
    * Create a new user row. Returns the insertId.
    */
   async create({ username, email, hashedPassword }) {
-    const [result] = await db.execute(
-      `INSERT INTO users (username, email, password, health_score, xp, streak)
-       VALUES (?, ?, ?, 50, 0, 0)`,
-      [username, email, hashedPassword]
-    );
+    const includeCombatColumns = await hasCombatColumns();
+    const query = includeCombatColumns
+      ? `INSERT INTO users (username, email, password, health_score, xp, streak, attacks_prevented, breaches_caused)
+         VALUES (?, ?, ?, 50, 0, 0, 0, 0)`
+      : `INSERT INTO users (username, email, password, health_score, xp, streak)
+         VALUES (?, ?, ?, 50, 0, 0)`;
+
+    const [result] = await db.execute(query, [username, email, hashedPassword]);
     return result.insertId;
   },
 
@@ -62,6 +88,53 @@ const UserModel = {
        WHERE id = ?`,
       [healthReward, xpReward, userId]
     );
+  },
+
+  /**
+   * Apply a scenario result — correct or wrong — in a single query.
+   * Correct:  health += reward (capped 100), xp += xpReward * streakMultiplier, attacks_prevented++
+   * Wrong:    health -= penalty (floored 0), xp += floor(xpReward * 0.1), breaches_caused++
+   *
+   * streakMultiplier: streak > 5 → 1.5x XP, streak > 2 → 1.2x, else 1x
+   */
+  async applyActionResult(userId, { correct, healthDelta, xpBase, currentStreak }) {
+    const multiplier = currentStreak > 5 ? 1.5 : currentStreak > 2 ? 1.2 : 1.0;
+    const xpGained   = correct
+      ? Math.round(xpBase * multiplier)
+      : Math.round(xpBase * 0.1); // consolation XP for trying
+
+    const includeCombatColumns = await hasCombatColumns();
+
+    if (correct) {
+      await db.execute(
+        includeCombatColumns
+          ? `UPDATE users
+             SET health_score      = LEAST(health_score + ?, 100),
+                 xp                = xp + ?,
+                 attacks_prevented = attacks_prevented + 1
+             WHERE id = ?`
+          : `UPDATE users
+             SET health_score = LEAST(health_score + ?, 100),
+                 xp           = xp + ?
+             WHERE id = ?`,
+        [healthDelta, xpGained, userId]
+      );
+    } else {
+      await db.execute(
+        includeCombatColumns
+          ? `UPDATE users
+             SET health_score   = GREATEST(health_score - ?, 0),
+                 xp             = xp + ?,
+                 breaches_caused = breaches_caused + 1
+             WHERE id = ?`
+          : `UPDATE users
+             SET health_score = GREATEST(health_score - ?, 0),
+                 xp           = xp + ?
+             WHERE id = ?`,
+        [Math.abs(healthDelta), xpGained, userId]
+      );
+    }
+    return { xpGained, multiplier };
   },
 
   /**

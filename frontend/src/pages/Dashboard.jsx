@@ -33,7 +33,7 @@ const MODULE_ROUTES = {
 export default function Dashboard() {
   const navigate            = useNavigate();
   const { user, logout }    = useAuth();
-  const { dispatch }        = useGameState();
+  const { dispatch, crisis } = useGameState();
 
   const [selectedRoom,   setSelectedRoom]   = useState(null);
   const [modulesToday,   setModulesToday]   = useState(0);
@@ -134,7 +134,39 @@ export default function Dashboard() {
         xp={xp}
         streak={streak}
         completedChallenges={completed}
+        attacksPrevented={user?.attacksPrevented ?? 0}
+        breachesCaused={user?.breachesCaused ?? 0}
       />
+
+      {/* Crisis banner — shown when a crisis event is active */}
+      {crisis && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, zIndex: 300,
+          background: "rgba(255,45,85,.95)", padding: "10px 20px",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          borderBottom: "2px solid #ff2d55",
+          boxShadow: "0 0 30px rgba(255,45,85,.6)",
+          animation: "blink 0.8s infinite",
+        }}>
+          <div style={{ fontFamily: "var(--pixel)", fontSize: "6px", color: "#fff" }}>
+            🚨 CRISIS: {crisis.title} — {crisis.message}
+          </div>
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button onClick={() => navigate(crisis.route)} style={{
+              fontFamily: "var(--pixel)", fontSize: "5px", color: "#0a0e1a",
+              background: "#fff", border: "none", padding: "5px 10px", cursor: "pointer",
+            }}>
+              RESPOND NOW
+            </button>
+            <button onClick={() => dispatch({ type: "CLEAR_CRISIS" })} style={{
+              fontFamily: "var(--pixel)", fontSize: "5px", color: "#fff",
+              background: "transparent", border: "1px solid #fff", padding: "5px 10px", cursor: "pointer",
+            }}>
+              DISMISS
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Room popup */}
       {selectedRoom && (
@@ -174,6 +206,33 @@ export default function Dashboard() {
               : "✓ ALL CLEAR"}
           </div>
           <div className="dashboard__room-popup-actions">
+            {/* Strategic actions */}
+            {selectedRoom.threats > 0 && (
+              <div style={{ display: "flex", gap: "6px", marginBottom: "8px", width: "100%" }}>
+                {[
+                  { action: "isolate", label: "🔒 ISOLATE", color: "#ffd700", title: "Clear threats, room goes offline" },
+                  { action: "patch",   label: "🔧 PATCH",   color: "#00f5ff", title: "Restore +20 HP" },
+                  { action: "ignore",  label: "⚠ IGNORE",  color: "#ff8c00", title: "Threats escalate over time" },
+                ].map(({ action, label, color, title }) => (
+                  <button key={action} title={title}
+                    onClick={() => {
+                      dispatch({ type: "PLAYER_ACTION", payload: { roomId: selectedRoom.id, action } });
+                      setSelectedRoom(null);
+                    }}
+                    style={{
+                      flex: 1, fontFamily: "var(--pixel)", fontSize: "4px",
+                      color, background: "transparent",
+                      border: `1px solid ${color}66`, padding: "6px 4px",
+                      cursor: "pointer", transition: "all .15s",
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = `${color}15`}
+                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
             <PixelButton text="▶ DEFEND" type="primary"
               onClick={() => {
                 setSelectedRoom(null);

@@ -53,13 +53,15 @@ export function AuthProvider({ children }) {
   }
 
   // Called by module pages after backend responds — keeps auth user in sync
-  function updateStats({ healthScore, xp, streak }) {
+  function updateStats({ healthScore, xp, streak, attacksPrevented, breachesCaused }) {
     setUser((prev) => prev ? {
       ...prev,
       healthScore,
       xp,
       streak,
       completedChallenges: (prev.completedChallenges ?? 0) + 1,
+      attacksPrevented: attacksPrevented ?? prev.attacksPrevented ?? 0,
+      breachesCaused:   breachesCaused   ?? prev.breachesCaused   ?? 0,
     } : prev);
   }
 
