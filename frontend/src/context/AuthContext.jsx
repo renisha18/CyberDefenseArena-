@@ -1,8 +1,7 @@
 // ── src/context/AuthContext.jsx ───────────────────────────────────────────
-// Single source of truth for auth state.
-// On mount, calls GET /api/auth/me to restore session from the HTTP-only
-// cookie — this is how the app knows if the user is already logged in after
-// a page refresh without touching localStorage at all.
+// Handles login / session / logout only.
+// After login it dispatches SYNC_FROM_AUTH to GameStateContext
+// so the game state starts with the real XP / streak / health from the DB.
 
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import api from "../services/api";
@@ -10,18 +9,20 @@ import api from "../services/api";
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user,    setUser]    = useState(null);   // null = not logged in
-  const [loading, setLoading] = useState(true);   // true while restoring session
+  const [user,    setUser]    = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // ── Restore session on page load ─────────────────────────────────────
-  // The browser sends the HTTP-only cookie automatically.
-  // If valid → setUser. If not → setUser(null) (silent, no redirect here).
   const restoreSession = useCallback(async () => {
     try {
       const { data } = await api.get("/auth/me");
-      setUser(data.user);
+      try {
+        const { data: dash } = await api.get("/user/dashboard");
+        setUser({ ...data.user, completedChallenges: dash.completedChallenges ?? 0 });
+      } catch {
+        setUser(data.user);
+      }
     } catch {
-      setUser(null); // cookie absent or expired — user must log in
+      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -29,32 +30,37 @@ export function AuthProvider({ children }) {
 
   useEffect(() => { restoreSession(); }, [restoreSession]);
 
-  // ── Login ─────────────────────────────────────────────────────────────
-  // Backend sets the HTTP-only cookie; we just store the user object in state.
   async function login({ email, password }) {
     const { data } = await api.post("/auth/login", { email, password });
-    setUser(data.user);
+    try {
+      const { data: dash } = await api.get("/user/dashboard");
+      setUser({ ...data.user, completedChallenges: dash.completedChallenges ?? 0 });
+    } catch {
+      setUser(data.user);
+    }
     return data.user;
   }
 
-  // ── Signup ────────────────────────────────────────────────────────────
   async function signup({ username, email, password }) {
     const { data } = await api.post("/auth/signup", { username, email, password });
-    setUser(data.user);
+    setUser({ ...data.user, completedChallenges: 0 });
     return data.user;
   }
 
-  // ── Logout ────────────────────────────────────────────────────────────
-  // Backend clears the cookie; we clear user state.
   async function logout() {
     try { await api.post("/auth/logout"); } catch { /* ignore */ }
     setUser(null);
   }
 
-  // ── Update player stats locally after challenge completion ────────────
-  // Avoids a full re-fetch just to update health/xp/streak.
+  // Called by module pages after backend responds — keeps auth user in sync
   function updateStats({ healthScore, xp, streak }) {
-    setUser((prev) => prev ? { ...prev, healthScore, xp, streak } : prev);
+    setUser((prev) => prev ? {
+      ...prev,
+      healthScore,
+      xp,
+      streak,
+      completedChallenges: (prev.completedChallenges ?? 0) + 1,
+    } : prev);
   }
 
   return (
@@ -64,7 +70,6 @@ export function AuthProvider({ children }) {
   );
 }
 
-// Convenience hook
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used inside <AuthProvider>");

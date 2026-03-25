@@ -1,12 +1,11 @@
 // ── models/userChallengeModel.js ──────────────────────────────────────────
-// Junction table queries: which challenges has a user completed?
+// Rule change: 1 per MODULE per day (was: 1 per day total).
+// Allows up to 4 submissions per day — one per module category.
 
 const db = require("../config/db");
 
 const UserChallengeModel = {
-  /**
-   * Return all user_challenge rows for a given user.
-   */
+
   async getByUser(userId) {
     const [rows] = await db.execute(
       "SELECT * FROM user_challenges WHERE user_id = ?",
@@ -15,10 +14,41 @@ const UserChallengeModel = {
     return rows;
   },
 
-  /**
-   * Check if a user already completed ANY challenge today.
-   * Enforces the "one challenge per day" rule.
-   */
+  // ── NEW: checks if THIS MODULE was already completed today ─────────────
+  // Used by gameService.validateSubmission instead of old completedToday()
+  async completedModuleToday(userId, category) {
+    const today = new Date().toISOString().split("T")[0];
+    const [rows] = await db.execute(
+      `SELECT uc.id
+       FROM user_challenges uc
+       JOIN challenges c ON c.id = uc.challenge_id
+       WHERE uc.user_id     = ?
+         AND uc.completed   = TRUE
+         AND uc.completed_date = ?
+         AND c.category     = ?
+       LIMIT 1`,
+      [userId, today, category]
+    );
+    return rows.length > 0;
+  },
+
+  // ── NEW: how many distinct modules completed today (0–4) ───────────────
+  // Used by userController.getDashboard for the "X/4 today" pill
+  async modulesCompletedToday(userId) {
+    const today = new Date().toISOString().split("T")[0];
+    const [rows] = await db.execute(
+      `SELECT COUNT(DISTINCT c.category) AS cnt
+       FROM user_challenges uc
+       JOIN challenges c ON c.id = uc.challenge_id
+       WHERE uc.user_id       = ?
+         AND uc.completed     = TRUE
+         AND uc.completed_date = ?`,
+      [userId, today]
+    );
+    return rows[0].cnt;
+  },
+
+  // Kept for backward compat (phishingController status endpoint)
   async completedToday(userId) {
     const today = new Date().toISOString().split("T")[0];
     const [rows] = await db.execute(
@@ -30,9 +60,6 @@ const UserChallengeModel = {
     return rows.length > 0;
   },
 
-  /**
-   * Check if a specific challenge was already completed by this user.
-   */
   async isCompleted(userId, challengeId) {
     const [rows] = await db.execute(
       `SELECT id FROM user_challenges
@@ -43,9 +70,6 @@ const UserChallengeModel = {
     return rows.length > 0;
   },
 
-  /**
-   * Mark a challenge as completed for a user (upsert pattern).
-   */
   async markComplete(userId, challengeId) {
     const today = new Date().toISOString().split("T")[0];
     await db.execute(
@@ -56,9 +80,6 @@ const UserChallengeModel = {
     );
   },
 
-  /**
-   * Count how many challenges a user has completed in total.
-   */
   async countCompleted(userId) {
     const [rows] = await db.execute(
       `SELECT COUNT(*) AS total FROM user_challenges
@@ -68,10 +89,6 @@ const UserChallengeModel = {
     return rows[0].total;
   },
 
-  /**
-   * Return the highest level challenge this user has completed.
-   * Used to determine which next challenge is unlocked.
-   */
   async maxCompletedLevel(userId) {
     const [rows] = await db.execute(
       `SELECT COALESCE(MAX(c.level), 0) AS max_level
