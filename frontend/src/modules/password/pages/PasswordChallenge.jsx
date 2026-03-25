@@ -147,8 +147,18 @@ export default function PasswordChallenge() {
 
         {/* Choice or Audit component */}
         {levelData.type === "audit"
-          ? <AuditScenario  level={levelData} onSubmit={handleSubmit} disabled={!!result || submitting} />
-          : <ChoiceScenario level={levelData} onSubmit={handleSubmit} disabled={!!result || submitting} />
+          ? <AuditScenario
+              key={`password-audit-${uiLevel}`}
+              level={levelData}
+              onSubmit={handleSubmit}
+              disabled={!!result || submitting}
+            />
+          : <ChoiceScenario
+              key={`password-choice-${uiLevel}`}
+              level={levelData}
+              onSubmit={handleSubmit}
+              disabled={!!result || submitting}
+            />
         }
       </div>
 
